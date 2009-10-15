@@ -4,6 +4,11 @@ class Main
       # View helper methods can go here and then be included in your
       # mustache view files.
       
+      def html_escape(s)
+        s.to_s.gsub(/&/, "&amp;").gsub(/\"/, "&quot;").gsub(/>/, "&gt;").gsub(/</, "&lt;")
+      end
+      alias h html_escape
+      
       def help_me
         "HELP!"
       end

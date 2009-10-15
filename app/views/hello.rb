@@ -4,6 +4,7 @@ class Main
       include Main::Helpers::Site
       
       attr_reader :name
+      
     end
   end
 end

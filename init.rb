@@ -11,6 +11,7 @@ end
 require "monk/glue"
 require 'active_support'
 require 'mustache/sinatra'
+require 'ohm'
 
 class Main < Monk::Glue
   set :app_file, __FILE__
@@ -20,6 +21,8 @@ class Main < Monk::Glue
   set :mustaches, root_path('app', 'views')
   
   configure do
+    Ohm.connect(settings(:redis) || {})
+    
     # Load all application files.
     Dir[root_path("app/**/*.rb")].each do |file|
       require file
