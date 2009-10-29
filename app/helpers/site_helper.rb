@@ -7,7 +7,7 @@ class Main
       def html_escape(s)
         s.to_s.gsub(/&/, "&amp;").gsub(/\"/, "&quot;").gsub(/>/, "&gt;").gsub(/</, "&lt;")
       end
-      alias h html_escape
+      alias_method :h, :html_escape
       
       def help_me
         "HELP!"
