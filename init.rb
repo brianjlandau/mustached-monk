@@ -26,9 +26,9 @@ class Main < Monk::Glue
   use Rack::Session::Cookie
   use Rack::Static, :urls => ["/images", "/js", "/styles"], :root => "public"
   use Rack::Cache,
-    :verbose     => true,
-    :metastore   => 'redis://localhost:6379/2',
-    :entitystore => 'redis://localhost:6379/3'
+    :verbose     => settings(:cache_verbose),
+    :metastore   => settings(:cache_metastore),
+    :entitystore => settings(:cache_entitystore)
   use Rack::ETag
   
   register Mustache::Sinatra

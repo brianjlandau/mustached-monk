@@ -1,11 +1,16 @@
 defaults: &defaults
   :log_level: warn
+  :cache_metastore: redis://localhost:6379/2
+  :cache_entitystore: redis://localhost:6379/3
+  :cache_verbose: false
   :redis:
     :db: 1
 
 :development:
   <<: *defaults
   :log_level: debug
+  :cache_verbose: true
+  
 
 :test:
   <<: *defaults
