@@ -11,4 +11,5 @@ faker 0.3.1 (test) git://github.com/yyyc514/faker.git
 rack-test 0.5.1 (test) git://github.com/brynary/rack-test.git
 webrat 0.5.3 (test) git://github.com/brynary/webrat.git
 ohm git://github.com/brianjlandau/ohm.git
+redis git://github.com/ezmobius/redis-rb.git
 nice-n-easy git://github.com/brianjlandau/nice-n-easy.git

@@ -9,14 +9,19 @@ rescue LoadError
 end
 
 require "monk/glue"
+require 'rack/static'
 require 'active_support'
+require 'redis'
+require 'ohm'
 require 'mustache/sinatra'
 require 'sinatra/nice_easy_helpers'
-require 'ohm'
 
 class Main < Monk::Glue
   set :app_file, __FILE__
+  
   use Rack::Session::Cookie
+  use Rack::Static, :urls => ["/images", "/js", "/styles"], :root => "public"
+  
   register Mustache::Sinatra
   set :views, root_path('app', 'templates')
   set :mustaches, root_path('app', 'views')

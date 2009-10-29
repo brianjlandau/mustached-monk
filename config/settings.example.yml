@@ -1,5 +1,7 @@
 defaults: &defaults
   :log_level: warn
+  :redis:
+    :db: 1
 
 :development:
   <<: *defaults

@@ -1,22 +1,18 @@
-# encoding: UTF-8
+unless defined?(::Redis)
+  require 'socket'
 
-# pulled from http://github.com/ezmobius/redis-rb/raw/master/lib/redis.rb
-
-require 'socket'
-
-begin
-  if RUBY_VERSION >= '1.9'
-    require 'timeout'
-    RedisTimer = Timeout
-  else
-    require 'system_timer'
-    RedisTimer = SystemTimer
+  begin
+    if RUBY_VERSION >= '1.9'
+      require 'timeout'
+      RedisTimer = Timeout
+    else
+      require 'system_timer'
+      RedisTimer = SystemTimer
+    end
+  rescue LoadError
+    RedisTimer = nil
   end
-rescue LoadError
-  RedisTimer = nil
-end
 
-module Ohm
   class Redis
     OK      = "OK".freeze
     MINUS    = "-".freeze
@@ -38,6 +34,11 @@ module Ohm
       "echo"      => true,
       "getset"    => true,
       "smove"     => true
+    }
+
+    MULTI_BULK_COMMANDS = {
+      "mset"   => true,
+      "msetnx" => true
     }
 
     BOOLEAN_PROCESSOR = lambda{|r| r == 1 }
@@ -120,10 +121,6 @@ module Ohm
     def to_s
       "Redis Client connected to #{server} against DB #{@db}"
     end
-    
-    def list(key)
-      call_command([:lrange, key, 0, -1])
-    end
 
     def server
       "#{@host}:#{@port}"
@@ -195,21 +192,33 @@ module Ohm
         argvv = argvp
       end
 
-      command = ''
-
-      argvv.each do |argv|
-        bulk = nil
-        argv[0] = argv[0].to_s.downcase
-        argv[0] = ALIASES[argv[0]] if ALIASES[argv[0]]
-        raise "#{argv[0]} command is disabled" if DISABLED_COMMANDS[argv[0]]
-        if BULK_COMMANDS[argv[0]] and argv.length > 1
-          bulk = argv[-1].to_s
-          argv[-1] = bulk.respond_to?(:bytesize) ? bulk.bytesize : bulk.size
+      if MULTI_BULK_COMMANDS[argvv.flatten[0].to_s]
+        # TODO improve this code
+        argvp   = argvv.flatten
+        values  = argvp.pop.to_a.flatten
+        argvp   = values.unshift(argvp[0])
+        command = ["*#{argvp.size}"]
+        argvp.each do |v|
+          v = v.to_s
+          command << "$#{get_size(v)}"
+          command << v
         end
-        command << "#{argv.join(' ')}\r\n"
-        command << "#{bulk}\r\n" if bulk
+        command = command.map {|cmd| "#{cmd}\r\n"}.join
+      else
+        command = ""
+        argvv.each do |argv|
+          bulk = nil
+          argv[0] = argv[0].to_s.downcase
+          argv[0] = ALIASES[argv[0]] if ALIASES[argv[0]]
+          raise "#{argv[0]} command is disabled" if DISABLED_COMMANDS[argv[0]]
+          if BULK_COMMANDS[argv[0]] and argv.length > 1
+            bulk = argv[-1].to_s
+            argv[-1] = get_size(bulk)
+          end
+          command << "#{argv.join(' ')}\r\n"
+          command << "#{bulk}\r\n" if bulk
+        end
       end
-
       results = maybe_lock { process_command(command, argvv) }
 
       return pipeline ? results : results[0]
@@ -289,12 +298,6 @@ module Ohm
     rescue Errno::ECONNRESET
     end
 
-    def pipelined(&block)
-      pipeline = Pipeline.new self
-      yield pipeline
-      pipeline.execute
-    end
-
     def read_reply
       # We read the first byte using read() mainly because gets() is
       # immune to raw socket timeouts.
@@ -334,6 +337,19 @@ module Ohm
       else
         raise "Protocol error, got '#{rtype}' as initial reply byte"
       end
+    end
+
+    private
+      def get_size(string)
+        string.respond_to?(:bytesize) ? string.bytesize : string.size
+      end
+  end
+end
+  
+module Ohm
+  class Redis < ::Redis
+    def list(key)
+      call_command([:lrange, key, 0, -1])
     end
   end
 end
