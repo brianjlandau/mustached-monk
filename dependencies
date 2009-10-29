@@ -2,6 +2,7 @@ dependencies 0.0.7 git://github.com/djanowski/dependencies.git
 monk-glue git://github.com/monkrb/glue.git
 quietbacktrace 0.1.1 git://github.com/thoughtbot/quietbacktrace.git
 rack 1.0.1 git://github.com/rack/rack.git
+rack-cache 0.5.2 git://github.com/rtomayko/rack-cache.git
 sinatra 0.9.4 git://github.com/sinatra/sinatra.git
 mustache git://github.com/brianjlandau/mustache.git
 activesupport 2.3.4
@@ -12,4 +13,5 @@ rack-test 0.5.1 (test) git://github.com/brynary/rack-test.git
 webrat 0.5.3 (test) git://github.com/brynary/webrat.git
 ohm git://github.com/brianjlandau/ohm.git
 redis git://github.com/ezmobius/redis-rb.git
+jodosha-redis-store 0.3.6 git://github.com/jodosha/redis-store.git
 nice-n-easy git://github.com/brianjlandau/nice-n-easy.git
