@@ -23,13 +23,13 @@ require 'sinatra/nice_easy_helpers'
 class Main < Monk::Glue
   set :app_file, __FILE__
   
-  use Rack::Session::Cookie
   use Rack::Static, :urls => ["/images", "/js", "/styles"], :root => "public"
   use Rack::Cache,
     :verbose     => settings(:cache_verbose),
     :metastore   => settings(:cache_metastore),
     :entitystore => settings(:cache_entitystore)
   use Rack::ETag
+  use Rack::Session::Cookie
   
   register Mustache::Sinatra
   set :views, root_path('app', 'templates')
