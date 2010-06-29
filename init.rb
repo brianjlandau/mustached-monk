@@ -25,19 +25,22 @@ class Main < Monk::Glue
   
   use Rack::Static, :urls => ["/images", "/js", "/styles"], :root => "public"
   use Rack::Cache,
-    :verbose     => settings(:cache_verbose),
-    :metastore   => settings(:cache_metastore),
-    :entitystore => settings(:cache_entitystore)
+    :verbose     => monk_settings(:cache_verbose),
+    :metastore   => monk_settings(:cache_metastore),
+    :entitystore => monk_settings(:cache_entitystore)
   use Rack::ETag
   use Rack::Session::Cookie
   
   register Mustache::Sinatra
-  set :views, root_path('app', 'templates')
-  set :mustaches, root_path('app', 'views')
+  set :mustache, {
+     :namespace => ::Main,
+     :views     => root_path('app', 'views'),
+     :templates => root_path('app', 'templates')
+  }
   helpers Sinatra::NiceEasyHelpers
   
   configure do
-    Ohm.connect(settings(:redis) || {})
+    Ohm.connect(monk_settings(:redis) || {})
     
     # Load all application files.
     Dir[root_path("app/**/*.rb")].each do |file|

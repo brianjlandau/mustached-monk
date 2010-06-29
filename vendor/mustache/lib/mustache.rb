@@ -85,10 +85,38 @@ class Mustache
     render(*args)
   end
 
+  # Given a file name and an optional context, attempts to load and
+  # render the file as a template.
+  def self.render_file(name, context = {})
+    render(partial(name), context)
+  end
+
+  # Given a file name and an optional context, attempts to load and
+  # render the file as a template.
+  def render_file(name, context = {})
+    self.class.render_file(name, context)
+  end
+
+  # Given a name, attempts to read a file and return the contents as a
+  # string. The file is not rendered, so it might contain
+  # {{mustaches}}.
+  #
+  # Call `render` if you need to process it.
+  def self.partial(name)
+    File.read("#{template_path}/#{name}.#{template_extension}")
+  end
+
+  # Override this in your subclass if you want to do fun things like
+  # reading templates from a database. It will be rendered by the
+  # context, so all you need to do is return a string.
+  def partial(name)
+    self.class.partial(name)
+  end
+
   # The template path informs your Mustache subclass where to look for its
   # corresponding template. By default it's the current directory (".")
   def self.template_path
-    @template_path ||= '.'
+    @template_path ||= inheritable_config_for :template_path, '.'
   end
 
   def self.template_path=(path)
@@ -108,7 +136,7 @@ class Mustache
 
   # A Mustache template's default extension is 'mustache'
   def self.template_extension
-    @template_extension ||= 'mustache'
+    @template_extension ||= inheritable_config_for :template_extension, 'mustache'
   end
 
   def self.template_extension=(template_extension)
@@ -116,10 +144,21 @@ class Mustache
     @template = nil
   end
 
+  # The template name is the Mustache template file without any
+  # extension or other information. Defaults to `class_name`.
+  def self.template_name
+    @template_name || underscore
+  end
+
+  def self.template_name=(template_name)
+    @template_name = template_name
+    @template = nil
+  end
+
   # The template file is the absolute path of the file Mustache will
   # use as its template. By default it's ./class_name.mustache
   def self.template_file
-    @template_file || "#{path}/#{underscore}.#{template_extension}"
+    @template_file || "#{path}/#{template_name}.#{template_extension}"
   end
 
   def self.template_file=(template_file)
@@ -143,7 +182,7 @@ class Mustache
   # `Object`, but it might be nice to set it to something like `Hurl::Views` if
   # your app's main namespace is `Hurl`.
   def self.view_namespace
-    @view_namespace || Object
+    @view_namespace ||= inheritable_config_for(:view_namespace, Object)
   end
 
   def self.view_namespace=(namespace)
@@ -153,7 +192,7 @@ class Mustache
   # Mustache searches the view path for .rb files to require when asked to find a
   # view class. Defaults to "."
   def self.view_path
-    @view_path ||= '.'
+    @view_path ||= inheritable_config_for(:view_path, '.')
   end
 
   def self.view_path=(path)
@@ -245,8 +284,19 @@ class Mustache
     if obj.is_a?(Template)
       obj
     else
-      Template.new(obj.to_s, template_path, template_extension)
+      Template.new(obj.to_s)
     end
+  end
+
+  # Return the value of the configuration setting on the superclass, or return 
+  # the default.
+  #
+  # attr_name - Symbol name of the attribute.  It should match the instance variable.
+  # default   - Default value to use if the superclass does not respond.
+  #
+  # Returns the inherited or default configuration setting.
+  def self.inheritable_config_for(attr_name, default)
+    superclass.respond_to?(attr_name) ? superclass.send(attr_name) : default
   end
 
   def templateify(obj)
@@ -292,7 +342,16 @@ class Mustache
   # Parses our fancy pants template file and returns normal file with
   # all special {{tags}} and {{#sections}}replaced{{/sections}}.
   def render(data = template, ctx = {})
-    templateify(data).render(context.update(ctx))
+    tpl = templateify(data)
+
+    return tpl.render(context) if ctx == {}
+
+    begin
+      context.push(ctx)
+      tpl.render(context)
+    ensure
+      context.pop
+    end
   end
   alias_method :to_html, :render
   alias_method :to_text, :render

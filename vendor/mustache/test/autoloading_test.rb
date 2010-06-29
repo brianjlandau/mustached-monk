@@ -1,10 +1,11 @@
-require 'test/unit'
+$LOAD_PATH.unshift File.dirname(__FILE__)
+require 'helper'
 
 module TestViews; end
 
 class AutoloadingTest < Test::Unit::TestCase
   def setup
-    Mustache.view_path = File.dirname(__FILE__) + '/../examples'
+    Mustache.view_path = File.dirname(__FILE__) + '/fixtures'
   end
 
   def test_autoload
@@ -41,7 +42,7 @@ end_render
     klass = Mustache.view_class(:namespaced_with_partial)
     assert_equal TestViews::NamespacedWithPartial, klass
     assert_equal <<-end_render.strip, klass.render
-My opinion: Victory!
+My opinion: Again, Victory!
 end_render
   end
 

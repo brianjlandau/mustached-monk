@@ -1,0 +1,11 @@
+*.rdb
+*.swp
+*.gem
+*-redis-store.gemspec
+bin/
+coverage/
+pkg/
+vendor/
+tmp/
+.idea
+.bundle/

@@ -30,7 +30,7 @@ Add this to your Sinatra app:
       helpers Sinatra::NiceEasyHelpers
     end
 
-See the RDocs for how to use the individual helpers
+See the [RDocs](http://brianjlandau.github.com/nice-n-easy/) for how to use the individual helpers
 
 
 ## Note on Patches/Pull Requests

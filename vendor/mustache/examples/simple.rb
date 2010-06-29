@@ -21,6 +21,4 @@ class Simple < Mustache
   end
 end
 
-if $0 == __FILE__
-  puts Simple.to_html
-end
+puts Simple.render if $0 == __FILE__

@@ -7,6 +7,9 @@ framework-agnostic way to render logic-free views.
 As ctemplates says, "It emphasizes separating logic from presentation:
 it is impossible to embed application logic in this template language."
 
+For a list of implementations (other than Ruby) and tips, see
+<http://mustache.github.com/>.
+
 
 Overview
 --------
@@ -72,9 +75,9 @@ reference others, some return values, some return only booleans.
 Now let's write the template:
 
     Hello {{name}}
-    You have just won ${{value}}!
+    You have just won {{value}} dollars!
     {{#in_ca}}
-    Well, ${{taxed_value}}, after taxes.
+    Well, {{taxed_value}} dollars, after taxes.
     {{/in_ca}}
 
 This template references our view methods. To bring it all together,
@@ -85,8 +88,8 @@ here's the code to render actual HTML;
 Which returns the following:
 
     Hello Chris
-    You have just won $10000!
-    Well, $6000.0, after taxes.
+    You have just won 10000 dollars!
+    Well, 6000.0 dollars, after taxes.
 
 Simple.
 
@@ -94,120 +97,22 @@ Simple.
 Tag Types
 ---------
 
-Tags are indicated by the double mustaches. `{{name}}` is a tag. Let's
-talk about the different types of tags.
-
-### Variables
-
-The most basic tag is the variable. A `{{name}}` tag in a basic
-template will try to call the `name` method on your view. If there is
-no `name` method, an exception will be raised.
-
-All variables are HTML escaped by default. If you want to return
-unescaped HTML, use the triple mustache: `{{{name}}}`.
-
-By default a variable "miss" returns an empty string. You can
-configure this by setting `Mustache.raise_on_context_miss` to true.
-
-### Boolean Sections
-
-A section begins with a pound and ends with a slash. That is,
-`{{#person}}` begins a "person" section while `{{/person}}` ends it.
-
-If the `person` method exists and calling it returns false, the HTML
-between the pound and slash will not be displayed.
-
-If the `person` method exists and calling it returns true, the HTML
-between the pound and slash will be rendered and displayed.
-
-### Enumerable Sections
-
-Enumerable sections are syntactically identical to boolean sections in
-that they begin with a pound and end with a slash. The difference,
-however, is in the view: if the method called returns an enumerable,
-the section is repeated as the enumerable is iterated over.
-
-Each item in the enumerable is expected to be a hash which will then
-become the context of the corresponding iteration. In this way we can
-construct loops.
-
-For example, imagine this template:
-
-    {{#repo}}
-      <b>{{name}}</b>
-    {{/repo}}
-
-And this view code:
-
-    def repo
-      Repository.all.map { |r| { :name => r.to_s } }
-    end
-
-When rendered, our view will contain a list of all repository names in
-the database.
-
-As a convenience, if a section returns a hash (as opposed to an array
-or a boolean) it will be treated as a single item array.
-
-With the above template, we could use this Ruby code for a single
-iteration:
-
-    def repo
-      { :name => Repository.first.to_s }
-    end
-
-This would be treated by Mustache as functionally equivalent to the
-following:
-
-    def repo
-      [ { :name => Repository.first.to_s } ]
-    end
+For a language-agnostic overview of Mustache's template syntax, see
+the `mustache(5)` manpage or
+<http://mustache.github.com/mustache.5.html>.
 
 
-### Comments
+Escaping
+--------
 
-Comments begin with a bang and are ignored. The following template:
+Mustache does escape all values when using the standard double
+Mustache syntax. Characters which will be escaped: `& \ " < >`. To
+disable escaping, simply use tripple mustaches like
+`{{{unescaped_variable}}}`.
 
-    <h1>Today{{! ignore me }}.</h1>
-
-Will render as follows:
-
-    <h1>Today.</h1>
-
-### Partials
-
-Partials begin with a greater than sign, like `{{> box}}`.
-
-If a partial's view is loaded, we use that to render the HTML. If
-nothing is loaded we render the template directly using our current context.
-
-In this way partials can reference variables or sections the calling
-view defines.
-
-
-### Set Delimiter
-
-Set Delimiter tags start with an equal sign and change the tag
-delimiters from {{ and }} to custom strings.
-
-Consider the following contrived example:
-
-    * {{ default_tags }}
-    {{=<% %>=}}
-    * <% erb_style_tags %>
-    <%={{ }}=%>
-    * {{ default_tags_again }}
-
-Here we have a list with three items. The first item uses the default
-tag style, the second uses erb style as defined by the Set Delimiter
-tag, and the third returns to the default style after yet another Set
-Delimiter declaration.
-
-According to [ctemplates][3], this "is useful for languages like TeX, where
-double-braces may occur in the text and are awkward to use for
-markup."
-
-Custom delimiters may not contain whitespace or the equals sign.
+Example: Using `{{variable}}` inside a template for `5 > 2` will
+result in `5 &gt; 2`, where as the usage of `{{{variable}}}` will
+result in `5 > 2`.
 
 
 Dict-Style Views
@@ -220,7 +125,7 @@ class-based and this more procedural style at your leisure.
 Given this template (winner.mustache):
 
     Hello {{name}}
-    You have just won ${{value}}!
+    You have just won {{value}} bucks!
 
 We can fill in the values at will:
 
@@ -232,14 +137,14 @@ We can fill in the values at will:
 Which returns:
 
     Hello George
-    You have just won $100!
+    You have just won 100 bucks!
 
 We can re-use the same object, too:
 
     view[:name] = 'Tony'
     view.render
     Hello Tony
-    You have just won $100!
+    You have just won 100 bucks!
 
 
 Templates
@@ -368,15 +273,22 @@ Sinatra
 
 Mustache ships with Sinatra integration. Please see
 `lib/mustache/sinatra.rb` or
-<http://defunkt.github.com/mustache/classes/Mustache/Sinatra.html> for
-complete documentation.
+<http://github.com/defunkt/mustache/blob/master/lib/mustache/sinatra.rb>
+for complete documentation.
 
 An example Sinatra application is also provided:
 <http://github.com/defunkt/mustache-sinatra-example>
 
+If you are upgrading to Sinatra 1.0 and Mustache 0.9.0+ from Mustache
+0.7.0 or lower, the settings have changed. But not that much.
+
+See [this diff](http://gist.github.com/345490) for what you need to
+do. Basically, things are named properly now and all should be
+contained in a hash set using `set :mustache, hash`.
+
 
 [Rack::Bug][4]
----------
+--------------
 
 Mustache also ships with a `Rack::Bug` panel. In your `config.ru` add
 the following code:
@@ -398,25 +310,42 @@ Vim
 Thanks to [Juvenn Woo](http://github.com/juvenn) for mustache.vim. It
 is included under the contrib/ directory.
 
+See <http://gist.github.com/323622> for installation instructions.
+
 
 Emacs
-----
+-----
 
-tpl-mode.el is included under the contrib/ directory for any Emacs users.
-Based on Google's tpl-mode for ctemplates, it adds support for Mustache's
-more lenient tag values and includes a few commands for your editing pleasure.
+mustache-mode.el is included under the contrib/ directory for any
+Emacs users. Based on Google's tpl-mode for ctemplates, it adds
+support for Mustache's more lenient tag values and includes a few
+commands for your editing pleasure.
+
+See <http://gist.github.com/323619> for installation instructions.
+
+
+TextMate
+--------
+
+[Mustache.tmbundle](http://github.com/defunkt/Mustache.tmbundle)
+
+See <http://gist.github.com/323624> for installation instructions.
+
+
+Command Line
+------------
+
+See `mustache(1)` man page or
+<http://mustache.github.com/mustache.1.html>
+for command line docs.
 
 
 Installation
 ------------
 
-### [Gemcutter](http://gemcutter.org/)
+### [RubyGems](http://rubygems.org/)
 
     $ gem install mustache
-
-### [Rip](http://hellorip.com)
-
-    $ rip install git://github.com/defunkt/mustache.git
 
 
 Acknowledgements
@@ -425,21 +354,52 @@ Acknowledgements
 Thanks to [Tom Preston-Werner](http://github.com/mojombo) for showing
 me ctemplate and [Leah Culver](http://github.com/leah) for the name "Mustache."
 
+Special thanks to [Magnus Holm](http://judofyr.net/) for all his
+awesome work on Mustache's parser.
+
+
+Contributing
+------------
+
+Once you've made your great commits:
+
+1. [Fork][fk] Mustache
+2. Create a topic branch - `git checkout -b my_branch`
+3. Push to your branch - `git push origin my_branch`
+4. Create an [Issue][is] with a link to your branch
+5. That's it!
+
+You might want to checkout Resque's [Contributing][cb] wiki page for information
+on coding standards, new features, etc.
+
+
+Mailing List
+------------
+
+To join the list simply send an email to <mustache@librelist.com>. This
+will subscribe you and send you information about your subscription,
+including unsubscribe information.
+
+The archive can be found at <http://librelist.com/browser/>.
+
 
 Meta
 ----
 
 * Code: `git clone git://github.com/defunkt/mustache.git`
-* Home: <http://github.com/defunkt/mustache>
-* Docs: <http://defunkt.github.com/mustache>
+* Home: <http://mustache.github.com>
 * Bugs: <http://github.com/defunkt/mustache/issues>
-* List: <http://groups.google.com/group/mustache-rb>
+* List: <mustache@librelist.com>
 * Test: <http://runcoderun.com/defunkt/mustache>
-* Gems: <http://gemcutter.org/gems/mustache>
-* Boss: Chris Wanstrath :: <http://github.com/defunkt>
+* Gems: <http://rubygems.org/gems/mustache>
+
+You can also find us in `#{` on irc.freenode.net.
 
 [1]: http://code.google.com/p/google-ctemplate/
 [2]: http://www.ivan.fomichev.name/2008/05/erlang-template-engine-prototype.html
 [3]: http://google-ctemplate.googlecode.com/svn/trunk/doc/howto.html
 [4]: http://github.com/brynary/rack-bug/
 [5]: http://img.skitch.com/20091027-n8pxwwx8r61tc318a15q1n6m14.png
+[cb]: http://wiki.github.com/defunkt/resque/contributing
+[fk]: http://help.github.com/forking/
+[is]: http://github.com/defunkt/mustache/issues
