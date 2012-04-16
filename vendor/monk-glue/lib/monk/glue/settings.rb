@@ -10,4 +10,3 @@ def monk_settings(key)
 
   $monk_settings[key]
 end
-

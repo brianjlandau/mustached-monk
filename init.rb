@@ -1,34 +1,29 @@
 ROOT_DIR = File.expand_path(File.dirname(__FILE__)) unless defined? ROOT_DIR
 
 require "rubygems"
+require 'bundler'
+Bundler.require(:default, (ENV['RACK_ENV'] || 'develpment').to_sym)
 
-begin
-  require "vendor/dependencies/lib/dependencies"
-rescue LoadError
-  require "dependencies"
+%w(lib initializers).each do |path|
+  $LOAD_PATH.unshift(File.join(ROOT_DIR, path)) unless $LOAD_PATH.include?(File.join(ROOT_DIR, path))
 end
 
-require "monk/glue"
 require 'rack/static'
-require 'rack/cache'
-require 'initializers/rack/etag'
+require 'rack/etag'
 require 'active_support'
-require 'redis'
-require "redis-store"
-require 'ohm'
-require 'mustache/sinatra'
-require 'sinatra/nice_easy_helpers'
-
+require 'active_support/core_ext'
+require 'mustache_sinatra_helpers'
 
 class Main < Monk::Glue
   set :app_file, __FILE__
   
-  use Rack::Static, :urls => ["/images", "/js", "/styles"], :root => "public"
+  use Rack::ETag
   use Rack::Cache,
     :verbose     => monk_settings(:cache_verbose),
     :metastore   => monk_settings(:cache_metastore),
     :entitystore => monk_settings(:cache_entitystore)
-  use Rack::ETag
+  use Rack::Static, :urls => ["/images", "/js", "/styles", "/favicon.ico"], :root => "public",
+    :cache_control => 'public, max-age=86400'
   use Rack::Session::Cookie
   
   register Mustache::Sinatra

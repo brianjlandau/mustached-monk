@@ -5,3 +5,5 @@ log/*
 *.log
 tmp/**/*
 config/settings.yml
+.rvmrc
+Gemfile.lock

@@ -1,11 +1,10 @@
 RAKE_ENV = ENV['RAKE_ENV'] || 'development'
+require 'rspec/core/rake_task'
 
-desc 'Default task: run all tests'
-task :default => [:test]
+desc 'Default task: run all specs'
+task :default => [:spec]
 
-task :test do
-  exec "thor monk:test"
-end
+RSpec::Core::RakeTask.new(:spec)
 
 task :environment do
   $:.push(File.dirname(__FILE__))
