@@ -17,6 +17,7 @@ require 'mustache_sinatra_helpers'
 class Main < Monk::Glue
   set :app_file, __FILE__
   
+  use Rack::Deflater
   use Rack::ETag
   use Rack::Cache,
     :verbose     => monk_settings(:cache_verbose),
