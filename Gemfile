@@ -2,7 +2,7 @@ source "http://rubygems.org"
 
 gem 'i18n'
 gem 'activesupport'
-gem 'sinatra', '~> 1.3'
+gem 'sinatra'
 gem 'monk-glue', :path => 'vendor/monk-glue', :require => 'monk/glue'
 gem 'rack'
 gem 'rack-cache'

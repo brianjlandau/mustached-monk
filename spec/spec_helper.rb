@@ -7,7 +7,6 @@ require 'capybara/rspec'
 
 Capybara.configure do |config|
   config.app = Main.new
-  config.asset_root = File.join(ROOT_DIR, 'public')
   config.save_and_open_page_path = File.join(ROOT_DIR, 'tmp/capybara')
 end
 

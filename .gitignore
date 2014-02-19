@@ -6,4 +6,5 @@ log/*
 tmp/**/*
 config/settings.yml
 .rvmrc
+.ruby-version
 Gemfile.lock
